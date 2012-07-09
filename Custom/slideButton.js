@@ -1,7 +1,7 @@
 /* 
      you need to first create an On/Off Switch widget,
 
-     and add this script to your Customizable widget,
+     and add this script to your Custom widget,
 
      then you can click On/Off Switch title to slide button
 
