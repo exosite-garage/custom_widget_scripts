@@ -70,10 +70,9 @@ function( container, portal )
     // collect output data
     for( i = 0; i < resources.length; i++ )
     {
-      group = [];
-
       for( j = 0; j < resources[i].data.length; j++ )
       {
+        group = [];
         date = new Date( resources[i].data[j][0] * 1000 );
         dateFormat = '';
         dateFormat += date.toLocaleTimeString() + ' ';
@@ -92,7 +91,7 @@ function( container, portal )
     output.cols.push( { label: 'Data Source', type: 'string' } );
     output.cols.push( { label: 'Time', type: 'string' } );
     output.cols.push( { label: 'Value', type: 'string' } );
-
+    
     // draw google chart
     google.load( 'visualization', '1',
     {
