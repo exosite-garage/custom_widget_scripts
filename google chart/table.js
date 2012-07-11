@@ -17,6 +17,8 @@ function( container, portal )
   googleChart( resources );
 
 
+
+
   /*-- functions --*/
   function collectDataSources( portal )
   {
@@ -57,39 +59,42 @@ function( container, portal )
   {
     var i,
         j,
-        output = {},
+        r,
         group,
+        output = { cols: [], rows: [] },
         date,
         dateFormat,
-        unit
+        unit,
+        valueFormat
     ;
     
-    output.cols = [];
-    output.rows = [];
-
     // collect output data
     for( i = 0; i < resources.length; i++ )
     {
-      for( j = 0; j < resources[i].data.length; j++ )
+      r = resources[i];
+
+      for( j = 0; j < r.data.length; j++ )
       {
         group = [];
-        date = new Date( resources[i].data[j][0] * 1000 );
+
+        date = new Date( r.data[j][0] * 1000 );
         dateFormat = '';
         dateFormat += date.toLocaleTimeString() + ' ';
         dateFormat += date.toDateString();
 
-        unit = JSON.parse( resources[i].info.description.meta ).datasource.unit;
+        unit = JSON.parse( r.info.description.meta ).datasource.unit;
+        valueFormat = String( r.data[j][1] ) + ' ' + unit;
 
-        group[0] = { v: resources[i].alias };
-        group[1] = { v: dateFormat };
-        group[2] = { v: String( resources[i].data[j][1] ) + ' ' + unit };
+        group[0] = { v: r.alias };
+        group[1] = { v: date, f: dateFormat };
+        group[2] = { v: r.data[j][1], f: valueFormat };
 
         output.rows.push( { c: group } );
       }
     }
 
     output.cols.push( { label: 'Data Source', type: 'string' } );
-    output.cols.push( { label: 'Time', type: 'string' } );
+    output.cols.push( { label: 'Time', type: 'date' } );
     output.cols.push( { label: 'Value', type: 'string' } );
     
     // draw google chart
@@ -116,7 +121,6 @@ function( container, portal )
               next: 'next'
             },
             pagingButtonsConfiguration: 'auto'
-
           }
       ;
       chart.draw( data, options );
