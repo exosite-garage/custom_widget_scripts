@@ -8,7 +8,7 @@
  * To Use: Add a Custom Widget to your Exosite Portals dashboard and insert this code.
  * 
  * Notes:
- * 1. The custom widget options should only select on dataport, otherwise 
+ * 1. The custom widget options should only select one dataport, otherwise 
  *    it will only get the first dataport.  
  * 
  * 2. Set custom widget refresh to 0.  This widget will refresh data itself
