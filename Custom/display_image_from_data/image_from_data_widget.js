@@ -5,6 +5,8 @@
  * Assumption is that the image is a jpg and was base64 encoded before writing 
  * to an Exosite dataport.
  * 
+ * To Use: Add a Custom Widget to your Exosite Portals dashboard and insert this code.
+ * 
  * Notes:
  * 1. The custom widget options should only select on dataport, otherwise 
  *    it will only get the first dataport.  
