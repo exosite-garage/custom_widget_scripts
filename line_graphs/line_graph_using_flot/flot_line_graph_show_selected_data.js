@@ -20,7 +20,8 @@ function(container, portal)
     var widgetid = getWidgetInfo("id");
     var html_graph = "graph" + String(widgetid);
     var html_graph_element = "#"+html_graph+"";
-   console.log("html element: " + html_graph);
+    console.log("html element: " + html_graph);
+    var graphwidget_div = 'graphwidget'+ String(widgetid);
 
     // flot graph options
     var detailOptions = {
@@ -250,14 +251,14 @@ function(container, portal)
         var html = "";
         console.log('set initial view');
 
-        if ( $('#graphwidget').length)
+        if ( $('#'+graphwidget_div).length)
         { 
             //console.log('found element, no need to recreate');
             ;
         }
         else
         {
-            html += '<div id=\"graphwidget\" style=\"width:95%; height:90%;\">';
+            html += '<div id=\"' +graphwidget_div+ '\" style=\"width:95%; height:90%;\">';
                 html += '<div id=\"' + html_graph + '\" class=\"graph\" style=\"margin-top:18px; margin-left:15px; width:100%; height:100%; text-align:center; position:relative\">';
                 html += 'just a sec...loading some data...';
                 html += '</div>';
