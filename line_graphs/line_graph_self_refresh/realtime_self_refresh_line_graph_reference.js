@@ -1,65 +1,48 @@
 /**
- * Example Exosite Custom Widget - Flot line graph
+ * Example Exosite Custom Widget - realtime updating line graph using flot 
  * http://www.flotcharts.org/
- * @version 1
+ *  
+ * Summary:
+ * This widget shows how to use widget 'read' api to read a dataport value quickly and 
+ * continously update the graph window.  This widget is not recommended for applications 
+ * when data is reported slowly and millisecond updates time to a graph isn't useful.
+ * 
+ * Notes:
+ * 1) Javascript and Flot timestamps are typically expecting milliseconds whereas 
+ *    Exosite timestamps are in seconds.  Please watch for this as you customize this code
+ * 2) Only works with one data port currently
+ * 3) Make sure to set the refresh of the widget configuration window to 0 seconds.
+ * 
  */
 
 // select one or more data sources from the list above to view this demo.
 function(container, portal)
 {
-    var REFRESH_LIMIT = 60*60; // number of times to refresh data from Exosite before stopping
-    var REFRESH_GRAPH_INTERVAL = 250; //milliseconds
+    // SETTINGS
+    // THIS VARIABLE SETS HOW MUCH TIME HISTORY TO SHOW IN MINUTES
+    var TIME_HISTORY_MIN = 5; //minutes of history to show
+    var TIME_HISTORY_S = TIME_HISTORY_MIN*60; // 
+    var TIME_HISTORY_MS = TIME_HISTORY_S*1000; //
+
+    var REFRESH_LIMIT = 60*60; // number of times to refresh getting data, this helps developers with mistakes so browser doesn't crash
+    
+    var REFRESH_GRAPH_INTERVAL = 250; //milliseconds, how often to refresh the graph
+    
     var DATA_GAP_TIMEOUT = 10; //gap in seconds to show line graph white space in if no data in that gap
-    var TIME_HISTORY = 5*60 // in seconds, default is 5 minutes, how much time to show
     
     var focus = true; // don't update graph if not on window tab
 
-    var times_to_refresh = 0; //counter for number of times refreshed
-    var time_since_last_value = 0;
-    var timer_id_datarefersh = 0;
-    var timer_id_checkagain = 0;
-    var timer_id_graphrefersh = 0;
-
-    var time_series_data = []; // array to hold the data to graph
-    var new_series_data = []; // array to hold new data
-
-    var last_time = parseInt((new Date).getTime() / 1000) - TIME_HISTORY; //pointer to help us track asking for data from Exosite Platform
-    
-    var graph_initialized = false; //only init once
-    var first_exo_data = true; //once loading first data, then start graphing
-    var one_val_at_a_time = false;
-
-    var widgetid = getWidgetInfo("id");
-    var html_graph = "graph" + String(widgetid);
-    var html_graph_element = "#"+html_graph+"";
-    console.log("html element: " + html_graph);
-    var graphwidget_div = 'graphwidget'+ String(widgetid);
-
-    // flot graph options
-    /*
-    var detailOptions = {
-        series: {
-            lines: { show: true, lineWidth: 1, fill: true, fillColor: "rgba(65, 196, 220, 0.2)"},
-            points: { show: true, radius: 0.2, fillColor: "#41C4DC" }
-        },
-        xaxis: { mode: "time", minTickSize: [1, 'minute'],TickSize: [1, 'minute'] },
-        //timeformat: "%m/%d/%Y",
-        timeformat: "%I:%M:%S %p",
-        selection: { mode: "x" },
-        grid: { hoverable: true, clickable: true },
-        pan: { interactive: false },
-        colors: ["#41C4DC"]
-    };
-    */
-
-    var detailOptions = {
+    //FLOT GRAPHING OPTIONS
+    var GRAPH_OPTIONS = {
         series: {
             lines: { show: true, lineWidth: 1, fill: false, fillColor: "rgba(65, 196, 220, 0.2)"},
-            points: { show: false, radius: 0.2, fillColor: "#41C4DC" }
+            points: { show: false, radius: 0.2, fillColor: "#41C4DC" },
+            shadowSize: 0
         },
         legend: { position: "nw" },
-        xaxis: { mode: "time"  },
+        //xaxis: { mode: "time"  },
         //xaxis: { mode: "time" , minTickSize: [1,"day"] },
+        xaxis: { mode: "time", show: false},
         //timeformat: "%m/%d/%Y",
         //timeformat: "%b %d",
         //timeformat: "%I:%M:%S %p",
@@ -70,6 +53,32 @@ function(container, portal)
         colors: ["#41C4DC","#FF5847","#FFC647", "#5D409C", "#BF427B","#D5E04D" ], // pick your own or comment out for defaults
         //grid: { backgroundColor:"#FFFFFF"}
     };
+
+
+
+    //widget variables
+    var times_to_refresh = 0; //counter for number of times refreshed
+    var time_since_last_value = 0;
+    var timer_id_datarefersh = 0;
+    var timer_id_checkagain = 0;
+    var timer_id_graphrefersh = 0;
+    var current_refresh_interval = REFRESH_GRAPH_INTERVAL;
+
+    var time_series_data = []; // array to hold the data to graph
+    var new_series_data = []; // array to hold new data
+
+    var last_time_s = parseInt((new Date).getTime() / 1000) - TIME_HISTORY_S; //pointer to help us track asking for data from Exosite Platform
+    
+    var graph_initialized = false; //only init once
+    var first_exo_data = true; //once loading first data, then start graphing
+
+    var dataport_friendly_name = '';
+    var dataport_units = '';
+    var widgetid = getWidgetInfo("id");
+    var html_graph = "graph" + String(widgetid);
+    var html_graph_element = "#"+html_graph+"";
+    console.log("html element: " + html_graph);
+    var graphwidget_div = 'graphwidget'+ String(widgetid);
 
     /*****
     * helper functions 
