@@ -26,7 +26,7 @@ function(container, portal)
 
     var REFRESH_LIMIT = 60*60; // number of times to refresh getting data, this helps developers with mistakes so browser doesn't crash
     
-    var REFRESH_GRAPH_INTERVAL = 250; //milliseconds, how often to refresh the graph
+    var REFRESH_GRAPH_INTERVAL = 30; //milliseconds, how often to refresh the graph
     
     var DATA_GAP_TIMEOUT = 30; //gap in seconds to show line graph white space in if no data in that gap
     
@@ -35,7 +35,7 @@ function(container, portal)
     //FLOT GRAPHING OPTIONS
     var GRAPH_OPTIONS = {
         series: {
-            lines: { show: true, lineWidth: 1, fill: false, fillColor: "rgba(65, 196, 220, 0.2)"},
+            lines: { show: true, lineWidth: 2, fill: true, fillColor: "rgba(65, 196, 220, 0.2)"},
             points: { show: true, radius: 0.8, fillColor: "#FFFFFF" },
             shadowSize: 0
         },
@@ -240,7 +240,7 @@ function(container, portal)
 
         // find data that is null inside of data gap timeout from leading eadge
         time_series_data = $.grep(time_series_data, function (value,index) {
-            if(value[0] <= (current_time_ms-DATA_GAP_TIMEOUT*1000 ) || value[1] != null){
+            if(value[0] <= (current_time_ms-(DATA_GAP_TIMEOUT*1000) ) || value[1] != null){
                 return true; //value is kept
             }
             else {
@@ -330,7 +330,7 @@ function(container, portal)
             {
                 ;
             }
-            else if (time_series_data[i][0] - time_series_data[i-1][0] > DATA_GAP_TIMEOUT*1000 && time_series_data[i][1] != null){
+            else if (time_series_data[i][0] - time_series_data[i-1][0] > (DATA_GAP_TIMEOUT*1000) && time_series_data[i][1] != null){
                 //console.log('mid gap in data: ' + i + ',' + time_series_data[i][0]);
                 //debugger;
                 ;
@@ -357,7 +357,7 @@ function(container, portal)
         };
 
         $.plot($(html_graph_element), [series], GRAPH_OPTIONS);
-        if (current_time_ms/1000 - time_since_last_value > 5 ){current_refresh_interval = 1000;}//refresh slower, we are not getting data very fast
+        if (current_time_ms/1000 - time_since_last_value > 30 ){current_refresh_interval = 1000;}//refresh slower, we are not getting data very fast
         else{ current_refresh_interval = REFRESH_GRAPH_INTERVAL;} //whatever user set to
 
         timer_id_graphrefersh = setTimeout(flotGraph, current_refresh_interval);
