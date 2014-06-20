@@ -28,7 +28,7 @@ function(container, portal)
     
     var REFRESH_GRAPH_INTERVAL = 250; //milliseconds, how often to refresh the graph
     
-    var DATA_GAP_TIMEOUT = 10; //gap in seconds to show line graph white space in if no data in that gap
+    var DATA_GAP_TIMEOUT = 30; //gap in seconds to show line graph white space in if no data in that gap
     
     var focus = true; // don't update graph if not on window tab
 
@@ -36,7 +36,7 @@ function(container, portal)
     var GRAPH_OPTIONS = {
         series: {
             lines: { show: true, lineWidth: 1, fill: false, fillColor: "rgba(65, 196, 220, 0.2)"},
-            points: { show: false, radius: 0.2, fillColor: "#41C4DC" },
+            points: { show: true, radius: 0.8, fillColor: "#FFFFFF" },
             shadowSize: 0
         },
         legend: { position: "nw" },
@@ -103,8 +103,7 @@ function(container, portal)
      return time;
     }
 
-    // returns a matrix of time and data.
-    // set flot to true if returning data for a flot graph.
+    // returns a matrix of new date with timestamps from Exosite.
     function getData()
     {
         
@@ -117,12 +116,12 @@ function(container, portal)
         var newData = [];
         var found_old_data = false;
 
-        var current_time = parseInt((new Date).getTime() / 1000);
+        var current_time_s = parseInt((new Date).getTime() / 1000);
 
-        //console.log('current time: '+current_time);
+        //console.log('current time: '+current_time_s);
         times_to_refresh++
         
-        if (current_time - last_time < 1){
+        if (current_time_s - last_time_s < 1){
             if(times_to_refresh < REFRESH_LIMIT){
                 //console.log('check again in 1 sec')
                 timer_id_checkagain = setTimeout(getData, 1000);
@@ -132,16 +131,13 @@ function(container, portal)
         }
 
         var read_options = {
-          starttime: last_time, // 1 week
-          endtime: current_time,  // current time
+          starttime: last_time_s, // start of data window
+          endtime: current_time_s,  // current time
           limit: 4000,                              // how many max points - this is a max limit set by Portals
           sort: "desc"                           // latest point
         };
 
-        var starttime = timeConverter(read_options.starttime);
-        var endtime = timeConverter(read_options.endtime);
-
-        console.log('getting data: ' + starttime + ' to ' + endtime);
+        console.log('getting data: ' + timeConverter(read_options.starttime) + ' to ' + timeConverter(read_options.endtime));
 
         for (i = 0; i < portal.clients.length; i++)
         {
@@ -152,6 +148,13 @@ function(container, portal)
             {
                 //console.log('getting values for:' + portal.clients[i].dataports[j].alias);
                 //console.log(JSON.stringify(read_options));
+                var meta = portal.clients[i].dataports[j]['info']['description']['meta'];
+                dataport_friendly_name = portal.clients[i].dataports[j]['info']['description']['name'];
+                var meta_json = JSON.parse(meta);
+                if (meta_json['datasource']['unit'] ){
+                    dataport_units = meta_json['datasource']['unit'];
+                }
+
                 read([portal.clients[i].alias, portal.clients[i].dataports[j].alias], read_options)
                   .done(function() {
                     newData = arguments;
@@ -159,8 +162,8 @@ function(container, portal)
                     for (k = 0; k < newData.length; k++)
                     {
                         row = [];
-                        timestamp = Number(newData[k][0]);
-                        //timestamp = Number(newData[k][0]) * 1000; //Change Unix Timestamps to Javascript milliseconds timestamp
+                        //timestamp = Number(newData[k][0]);
+                        timestamp = Number(newData[k][0]) * 1000; //Change Unix Timestamps to Javascript milliseconds timestamp
                         row.push(timestamp);
                         if (isNaN(Number(newData[k][1])))
                         {
@@ -171,7 +174,7 @@ function(container, portal)
                         row.push(value);
                         //console.log('new value:' + timeConverter(row[0]) + ',' + row[1]);
                         new_series_data.push(row);
-                        time_since_last_value = current_time;
+                        time_since_last_value = current_time_s;
                     }
 
                     //console.log('done getting data: ' + read_options.starttime + ' to ' + read_options.endtime );
@@ -183,7 +186,7 @@ function(container, portal)
                         setTimeout(flotGraph, 1000);
                     }
 
-                    last_time = read_options.endtime+1; 
+                    last_time_s = read_options.endtime+1; 
 
                     if(times_to_refresh < REFRESH_LIMIT){
                         //console.log('reschdule Exosite read')
@@ -204,19 +207,6 @@ function(container, portal)
         function initGraph()
         {
             console.log('init graph');
-
-            $(html_graph_element).bind("plotselected", function (event, ranges) {
-                // do the zooming
-                //console.log('zoom in, stop refresh')
-                //clearTimeout(timer_id_datarefersh);
-                //clearTimeout(timer_id_checkagain);
-                $.plot($(html_graph_element), [series],
-                        $.extend(true, {}, detailOptions, {
-                        xaxis: { min: ranges.xaxis.from, max: ranges.xaxis.to }
-                                
-                }));
-
-            });
 
             var previousPoint = null;
             $(html_graph_element).bind("plothover", function (event, pos, item) {
@@ -245,8 +235,19 @@ function(container, portal)
             return;
         }
 
-        var current_time = parseInt((new Date).getTime() / 1000);
-        var window_start = current_time-TIME_HISTORY;
+        var current_time_ms = parseInt((new Date).getTime()); //in MS
+        var window_start = current_time_ms-TIME_HISTORY_MS; //This is the graphing time window, assume it continuously moves
+
+        // find data that is null inside of data gap timeout from leading eadge
+        time_series_data = $.grep(time_series_data, function (value,index) {
+            if(value[0] <= (current_time_ms-DATA_GAP_TIMEOUT*1000 ) || value[1] != null){
+                return true; //value is kept
+            }
+            else {
+                //console.log('found null at timestamp: '+value[0]);
+                return false;
+            }
+        });
 
         // ADD NEW DATA IF AVAILABLE
         //if (new_series_data.length > 0) {console.log('new data for graph');}
@@ -266,24 +267,18 @@ function(container, portal)
             }
 
             if (unique_timestamp == true) {
+                //console.log('new data')
                 time_series_data.push(new_value);
             }
 
-            //if (one_val_at_a_time==true){
-            //  break;
-            //}
         }
-        if (one_val_at_a_time == false){
-            one_val_at_a_time = true;
-        }
-
 
 
         // MASSAGE DATA FOR GRAPHING
-                
+        
         // find data in time_series_data that is older than the time window and remove it
         time_series_data = $.grep(time_series_data, function (value,index) {
-            if(value[0] > (current_time - TIME_HISTORY) ){
+            if(value[0] > (current_time_ms - TIME_HISTORY_MS) ){
                 return true; //value is in than time window
             }
             else {
@@ -291,23 +286,11 @@ function(container, portal)
                 return false;
             }
         });
-
-
-        // find data that is null inside of data gap timeout from leading eadge
-        time_series_data = $.grep(time_series_data, function (value,index) {
-            if(value[0] <= (current_time-DATA_GAP_TIMEOUT ) || value[1] != null){
-                return true; //value is kept
-            }
-            else {
-                //console.log('found null at timestamp: '+value[0]);
-                return false;
-            }
-        });
-
+        
         // if no data, show user message instead of graph
         if (0 == time_series_data.length)
         {
-            errorMsg('No data within realtime data time window');
+            errorMsg('No data within last ' + String(TIME_HISTORY_MIN) + ' minutes');
             timer_id_graphrefersh = setTimeout(flotGraph, 1000);
             return;
         }
@@ -319,17 +302,25 @@ function(container, portal)
         time_series_data.sort(function(a,b){return a[0] - b[0]}); //
 
         // end value (real-time) should be null so graph leading edge stays up to current time
-        if (time_series_data[time_series_data.length-1][0] < current_time){
+        if (time_series_data[time_series_data.length-1][0] < current_time_ms){
             //console.log('set leading value to null');
-            time_series_data.push([current_time,null]);
+            time_series_data.push([current_time_ms,null]);
         }
 
+        var latest_good_value = 'na';
+        for (var i = time_series_data.length-1 ;i >= 0; i--) 
+        {
+            if (time_series_data[i][1] != null){
+                latest_good_value = time_series_data[i][1];
+                break;
+            }
+        }
         // start value (real-time) should be null so graph historical edge stays up to current time window
         if (time_series_data[0][0] > window_start){
             //console.log('start gap in data');
             time_series_data.splice(0,0,[window_start,null]); 
         }
-
+        
 
         
         var null_timeslots = [];
@@ -339,7 +330,7 @@ function(container, portal)
             {
                 ;
             }
-            else if (time_series_data[i][0] - time_series_data[i-1][0] > DATA_GAP_TIMEOUT && time_series_data[i][1] != null){
+            else if (time_series_data[i][0] - time_series_data[i-1][0] > DATA_GAP_TIMEOUT*1000 && time_series_data[i][1] != null){
                 //console.log('mid gap in data: ' + i + ',' + time_series_data[i][0]);
                 //debugger;
                 ;
@@ -354,29 +345,22 @@ function(container, portal)
         }
         
 
-        //console.log('call flot');
         if (graph_initialized == false){
             initGraph();
             graph_initialized = true;
         }
         
-        //console.log('update graph')
-
-        //Change Unix Timestamps to Javascript milliseconds timestamp
-        //for (var i = 0; i < time_series_data.length; i++)
-        //{
-        //    time_series_data[i][0] = time_series_data[i][0]*1000;
-        //}
-
         var series = {
-            label: "data",
+            label: dataport_friendly_name + ' ' + latest_good_value + ' ' + dataport_units,
             data: time_series_data,
             hoverable: true
         };
 
-        //console.log('graphing updated data');
-        $.plot($(html_graph_element), [series], detailOptions);
-        timer_id_graphrefersh = setTimeout(flotGraph, REFRESH_GRAPH_INTERVAL);
+        $.plot($(html_graph_element), [series], GRAPH_OPTIONS);
+        if (current_time_ms/1000 - time_since_last_value > 5 ){current_refresh_interval = 1000;}//refresh slower, we are not getting data very fast
+        else{ current_refresh_interval = REFRESH_GRAPH_INTERVAL;} //whatever user set to
+
+        timer_id_graphrefersh = setTimeout(flotGraph, current_refresh_interval);
 
     }
 
@@ -416,6 +400,7 @@ function(container, portal)
 
             $(container).html(html);
         }
+
     }
 
     /*****
