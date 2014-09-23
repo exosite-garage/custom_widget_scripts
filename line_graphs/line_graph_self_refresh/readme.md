@@ -16,6 +16,10 @@ This reference Javascript implements a scrolling widget that refreshes itself an
 3. WARNING: Using code that refreshes often in browser windows carefully.  You can easily kill your browser.
 
 
-### What it looks like
+### Examples of what it looks like
 
 ![image](screen_shot_line_graph.png)
+
+
+<iframe src="//fast.wistia.net/embed/iframe/571zmjkq8q" allowtransparency="true" frameborder="0" scrolling="no" class="wistia_embed" name="wistia_embed" allowfullscreen mozallowfullscreen webkitallowfullscreen oallowfullscreen msallowfullscreen width="640" height="126"></iframe>
+
