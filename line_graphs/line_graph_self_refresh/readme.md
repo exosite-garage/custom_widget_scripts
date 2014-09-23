@@ -20,4 +20,6 @@ This reference Javascript implements a scrolling widget that refreshes itself an
 
 ![image](screen_shot_line_graph.png)
 
+<a href="//fast.wistia.net/embed/iframe/571zmjkq8q?popover=true" class="wistia-popover[height=126,playerColor=7b796a,width=640]"><img src="https://embed-ssl.wistia.com/deliveries/124c80fe3cd795ffbfdb1b7cb2e11baed2108160.jpg?image_play_button=true&image_play_button_color=7b796ae0&image_crop_resized=480x94" alt="" /></a>
+<script charset="ISO-8859-1" src="//fast.wistia.com/assets/external/popover-v1.js"></script>
 
