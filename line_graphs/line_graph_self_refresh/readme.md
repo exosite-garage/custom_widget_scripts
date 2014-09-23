@@ -21,5 +21,6 @@ This reference Javascript implements a scrolling widget that refreshes itself an
 ![image](screen_shot_line_graph.png)
 
 
-<iframe src="//fast.wistia.net/embed/iframe/571zmjkq8q" allowtransparency="true" frameborder="0" scrolling="no" class="wistia_embed" name="wistia_embed" allowfullscreen mozallowfullscreen webkitallowfullscreen oallowfullscreen msallowfullscreen width="640" height="126"></iframe>
+<div id="wistia_571zmjkq8q" class="wistia_embed" style="width:640px;height:126px;">&nbsp;</div>
+<script charset="ISO-8859-1" src="//fast.wistia.com/assets/external/E-v1.js"></script>
 
