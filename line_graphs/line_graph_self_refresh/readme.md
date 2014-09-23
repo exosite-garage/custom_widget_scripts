@@ -21,6 +21,3 @@ This reference Javascript implements a scrolling widget that refreshes itself an
 ![image](screen_shot_line_graph.png)
 
 
-<div id="wistia_571zmjkq8q" class="wistia_embed" style="width:640px;height:126px;">&nbsp;</div>
-<script charset="ISO-8859-1" src="//fast.wistia.com/assets/external/E-v1.js"></script>
-
