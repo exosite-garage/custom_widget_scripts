@@ -27,7 +27,7 @@ function(container, portal)
   
     var dataport_friendly_name = '';
     var dataport_units = '';
-    var widgetid = getWidgetInfo("id2");
+    var widgetid = getWidgetInfo("id");
     var html_print = "draw" + String(widgetid);
     var printwidget_div = 'printwidget'+ String(widgetid);
 
