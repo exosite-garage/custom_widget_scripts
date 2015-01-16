@@ -170,20 +170,20 @@ function(container, portal) {
         slidername = data_alias.toString() + widgetInfo;
 
         if ($("#divwidget" + widgetInfo).width() > 230) {
-          html += portal.clients.length === 1 ? "<div style='width: 85%;margin:70px auto 10px auto;height:2em'>" : "<div style='width: 85%;margin:5px auto;height:2em'>";
-          html += "<span id='deviceName" + slidername + "' style='width:100%;line-height: 1em;'></span>";
-          html += "<span id='sliderValue" + slidername + "' style='font-size: 2em;position: absolute; left:46%;' ></span>";
+          html += portal.clients.length === 1 ? "<div style='width: 90%;margin:auto;padding:20px 0 0 0; height:1.5em'>" : "<div style='width: 90%;margin:5px auto;padding:2px 0 0 0; height:1.5em'>";
+          html += "<span id='deviceName" + slidername + "' style='width:100%;line-height: 1em;font-size:smaller '></span>";
+          html += "<span id='sliderValue" + slidername + "' style='font-size: 1.5em;position: absolute; right:0%;color:#69B1B9' ></span>";
           html += " </div>";
           html += " <div style='width:90%;margin:5px auto;text-align: center;'>";
           html += "   <div id='slider" + slidername + "'></div>";
           html += " </div>";
         } else {
-          html += "<div style='width: 85%;margin:5px auto;height:2em'>";
-          html += "<span id='deviceName" + slidername + "' style=';line-height: 1em;'></span>";
+          html += "<div style='width: 90%;margin:5px auto;height:2em'>";
+          html += "<span id='deviceName" + slidername + "' style='line-height: 1em;font-size:smaller'></span>";
           html += " </div>";
           html += " <div style='width:90%;margin:5px auto;text-align: center;'>";
           html += "   <div id='slider" + slidername + "'></div>";
-          html += "<div id='sliderValue" + slidername + "' style='font-size: 2em;' ></div>";
+          html += "<div id='sliderValue" + slidername + "' style='font-size: 2em;color:#69B1B9' ></div>";
           html += " </div>";
         }
 
@@ -232,7 +232,7 @@ function(container, portal) {
             $dataSpan;
           deviceName = dataport.deviceName;
           dataName = dataport.info.description.name;
-          $deviceSpan = jq110("<span>" + deviceName + "&nbsp</sapn>").css("font-weight", "bold");
+          $deviceSpan = jq110("<span>" + deviceName + "&nbsp</sapn>").css("color", "#69B1B9");
           $dataSpan = jq110("<span>" + dataName + "</sapn>").css("font-style", "italic");
           jq110("#deviceName" + slidername).append($deviceSpan).append($dataSpan);
         }
@@ -266,10 +266,12 @@ function(container, portal) {
         childDataports[vx] = checkAlias(childDataports[vx]);
 
         if (childDataports[vx].data.length === 0) {
-          showMsg("Data is empty.", "red");
+          showMsg("A selected dataport is empty.", "red");
+          //break;
         }
-        dataports[childDataports[vx].alias] = childDataports[vx];
-
+        else{
+          dataports[childDataports[vx].alias] = childDataports[vx];
+        }
       }
     }
     return dataports;
