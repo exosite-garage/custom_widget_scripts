@@ -8,4 +8,6 @@ Step 5: hit 'Submit' and see your data on the widget.
 
 You can sign up for a free Portals account at https://portals.exosite.com to use the Custom Widget and these example scripts. You can also use these to create custom Domain Widgets in your Exosite whitelabel subdomain >my company<.exosite.com.
 
+![image](readme_images/slider.gif)
 
+![image](readme_images/realtime_graph.gif)
