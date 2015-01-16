@@ -67,8 +67,9 @@ function(container, portal)
     var time_series_data = []; // array to hold the data to graph
     var new_series_data = []; // array to hold new data
 
-    var last_time_s = parseInt((new Date).getTime() / 1000) - TIME_HISTORY_S; //pointer to help us track asking for data from Exosite Platform
-    
+    var last_data_time_s = parseInt((new Date).getTime() / 1000) - TIME_HISTORY_S; //pointer to help us track asking for data from Exosite Platform
+    var last_check_time_s = 0;
+
     var graph_initialized = false; //only init once
     var first_exo_data = true; //once loading first data, then start graphing
 
@@ -121,23 +122,24 @@ function(container, portal)
         //console.log('current time: '+current_time_s);
         times_to_refresh++
         
-        if (current_time_s - last_time_s < 1){
+        if (current_time_s - last_check_time_s < 1){
             if(times_to_refresh < REFRESH_LIMIT){
                 //console.log('check again in 1 sec')
-                timer_id_checkagain = setTimeout(getData, 1000);
+                timer_id_checkagain = setTimeout(getData, 500);
                 return;
             }
             return;
         }
 
+        last_check_time_s = current_time_s;
+
         var read_options = {
-          starttime: last_time_s, // start of data window
-          endtime: current_time_s,  // current time
+          starttime: last_data_time_s+1, // start of data window
           limit: 4000,                              // how many max points - this is a max limit set by Portals
           sort: "desc"                           // latest point
         };
 
-        console.log('getting data: ' + timeConverter(read_options.starttime) + ' to ' + timeConverter(read_options.endtime));
+        console.log('getting data: ' + timeConverter(read_options.starttime) + ' to ' + timeConverter(current_time_s));
 
         for (i = 0; i < portal.clients.length; i++)
         {
@@ -147,7 +149,7 @@ function(container, portal)
             for (j = 0; j < portal.clients[i].dataports.length; j++)
             {
                 //console.log('getting values for:' + portal.clients[i].dataports[j].alias);
-                //console.log(JSON.stringify(read_options));
+                console.log(JSON.stringify(read_options));
                 var meta = portal.clients[i].dataports[j]['info']['description']['meta'];
                 dataport_friendly_name = portal.clients[i].dataports[j]['info']['description']['name'];
                 var meta_json = JSON.parse(meta);
@@ -162,9 +164,10 @@ function(container, portal)
                     for (k = 0; k < newData.length; k++)
                     {
                         row = [];
-                        //timestamp = Number(newData[k][0]);
-                        timestamp = Number(newData[k][0]) * 1000; //Change Unix Timestamps to Javascript milliseconds timestamp
-                        row.push(timestamp);
+                        timestamp_s = Number(newData[k][0]);
+                        timestamp_ms = Number(newData[k][0]) * 1000; //Change Unix Timestamps to Javascript milliseconds timestamp
+
+                        row.push(timestamp_ms);
                         if (isNaN(Number(newData[k][1])))
                         {
                             console.warn('not a number: ' + String(newData[k][1]) + ',skipping' );
@@ -174,10 +177,12 @@ function(container, portal)
                         row.push(value);
                         //console.log('new value:' + timeConverter(row[0]) + ',' + row[1]);
                         new_series_data.push(row);
-                        time_since_last_value = current_time_s;
+                      if (timestamp_s > time_since_last_value){
+                        time_since_last_value = timestamp_s;
+                      }
                     }
 
-                    //console.log('done getting data: ' + read_options.starttime + ' to ' + read_options.endtime );
+                    //console.log('done getting data: ' + read_options.starttime + ' to ' + current_time_s );
                     //console.log(JSON.stringify(new_series_data));
 
                     //flotGraph();
@@ -186,7 +191,7 @@ function(container, portal)
                         setTimeout(flotGraph, 1000);
                     }
 
-                    last_time_s = read_options.endtime+1; 
+                    last_data_time_s = time_since_last_value; 
 
                     if(times_to_refresh < REFRESH_LIMIT){
                         //console.log('reschdule Exosite read')
@@ -360,7 +365,11 @@ function(container, portal)
         if (current_time_ms/1000 - time_since_last_value > 30 ){current_refresh_interval = 1000;}//refresh slower, we are not getting data very fast
         else{ current_refresh_interval = REFRESH_GRAPH_INTERVAL;} //whatever user set to
 
-        timer_id_graphrefersh = setTimeout(flotGraph, current_refresh_interval);
+        if(times_to_refresh < REFRESH_LIMIT){
+            //console.log('reschdule Exosite read')
+            timer_id_graphrefersh = setTimeout(flotGraph, current_refresh_interval);
+        }
+        
 
     }
 
