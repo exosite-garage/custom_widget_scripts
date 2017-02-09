@@ -4,6 +4,7 @@
 function(container, portal) {
   var html = 'Latest temperature in chosen location: <div id="temperature">loading...</div>';
   html += '<div><a class="reload" href="javascript:void(0);">reload</a></div>';
+
   function reload() {
     // call the read widget API
     var options = {
@@ -12,15 +13,26 @@ function(container, portal) {
       limit: 1,                              // single point
       sort: "desc"                           // latest point
     };
-  
-    // Get Device Alias
-    var client = portal.clients[0];
-    device_alias = client.alias.toString();
-
-    // Get Dataport Alias
-    var dataport = client.dataports[0];
-    dataport = dataport.alias.toString();
-
+    try {
+       // Get Device Alias
+      var client = portal.clients[0];
+      // console.log(client)
+      device_alias = client.alias;
+      // console.log(device_alias)
+    }
+    catch(err) {
+        console.log("YOUR DEVICE MUST HAVE AN ALIAS IN ORDER FOR THE WIDGET API TO WORK.")
+    }
+    try {
+      // Get Dataport Alias
+      var dataport = client.dataports[0];
+      // console.log(dataport)
+      dataport = dataport.alias;
+      // console.log(dataport)
+    }
+    catch(err) {
+        console.log("YOUR DATAPORT MUST HAVE AN ALIAS IN ORDER FOR THE WIDGET API TO WORK.")
+    }
 
    read([device_alias, dataport], options)
       .done(function() {
